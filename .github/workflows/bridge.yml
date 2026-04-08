@@ -1,0 +1,36 @@
+name: Playtomic → PlaySight Bridge
+
+on:
+  # Runs every 5 minutes
+  schedule:
+    - cron: '*/5 * * * *'
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  poll-and-trigger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run bridge (single poll)
+        env:
+          PLAYTOMIC_CLIENT_ID: ${{ secrets.PLAYTOMIC_CLIENT_ID }}
+          PLAYTOMIC_SECRET: ${{ secrets.PLAYTOMIC_SECRET }}
+          PLAYTOMIC_TENANT_ID: ${{ secrets.PLAYTOMIC_TENANT_ID }}
+          PLAYSIGHT_API_URL: ${{ secrets.PLAYSIGHT_API_URL }}
+          PLAYSIGHT_API_KEY: ${{ secrets.PLAYSIGHT_API_KEY }}
+          PLAYSIGHT_FACILITY_ID: ${{ secrets.PLAYSIGHT_FACILITY_ID }}
+          COURT_MAPPING: ${{ secrets.COURT_MAPPING }}
+          TRIGGER_AHEAD_MINUTES: '7'
+        run: node -e "require('./src/bridge').pollAndTrigger().then(() => process.exit(0))"
